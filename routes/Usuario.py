@@ -42,10 +42,18 @@ async def delete_usuario(usuario_id: str):
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return {"message": "Usuario eliminado"}
 
-#Buscar usuario por email y contraseña
-@router.get("/login/{email}/{password}", response_model=Usuario)
-async def get_usuario_by_email(email: str, password: str):
-    usuario = await db["usuarios"].find_one({"email": email, "password": password})
+from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
+
+router = APIRouter()
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+@router.post("/login")
+async def login(login_data: LoginRequest):
+    usuario = await db["usuarios"].find_one({"email": login_data.email, "password": login_data.password})
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    return usuario
+    return {"email": usuario["email"], "message": "Inicio de sesión exitoso"}
