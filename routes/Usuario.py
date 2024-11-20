@@ -41,19 +41,3 @@ async def delete_usuario(usuario_id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return {"message": "Usuario eliminado"}
-
-from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
-
-router = APIRouter()
-
-class LoginRequest(BaseModel):
-    email: str
-    password: str
-
-@router.post("/login")
-async def login(login_data: LoginRequest):
-    usuario = await db["usuarios"].find_one({"mail": login_data.email, "password": login_data.password})
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    return {"email": usuario["mail"], "message": "Inicio de sesión exitoso"}
