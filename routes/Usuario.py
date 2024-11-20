@@ -41,3 +41,11 @@ async def delete_usuario(usuario_id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return {"message": "Usuario eliminado"}
+
+#Buscar usuario por email y contraseña
+@router.get("/login/{email}/{password}", response_model=Usuario)
+async def get_usuario_by_email(email: str, password: str):
+    usuario = await db["usuarios"].find_one({"email": email, "password": password})
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return usuario
