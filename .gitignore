@@ -1,1 +1,6 @@
 .vercel
+#ignorar entorno virtual
+.venv
+#Ignorar cache
+__pycache__/
+*.pyc
