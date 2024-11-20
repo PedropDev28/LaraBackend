@@ -5,7 +5,7 @@ from models.Login import Login
 router = APIRouter()
 
 
-@router.post("/login")
+@router.post("/")
 async def login(login_data: Login):
     usuario = await db["usuarios"].find_one({"mail": login_data.email, "password": login_data.password})
     if not usuario:
