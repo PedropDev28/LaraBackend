@@ -3,11 +3,19 @@ from db import db
 from fastapi import FastAPI
 import os
 from uvicorn import run as uvicorn_run
+from fastapi.middleware.cors import CORSMiddleware
+
+origins = [
+    "http://localhost:4200"
+]
+
+
 
 async def get_db():
     if db is None:
         raise RuntimeError("La conexión a MongoDB no está inicializada.")
     return db
+
 app = FastAPI()
 
 @app.get("/check_connection")
@@ -18,6 +26,7 @@ async def check_connection():
         return {"status": "Conexión exitosa a MongoDB", "collections": collections}
     except Exception as e:
         return {"status": "Error de conexión", "error": str(e)}
+    
 # Registrar rutas
 app.include_router(Usuario.router, prefix="/usuarios", tags=["Usuario"])
 app.include_router(Audios.router, prefix="/audios", tags=["Audios"])
@@ -28,3 +37,10 @@ app.include_router(Frases.router, prefix="/frases", tags=["Frases"])
 app.include_router(Surveys.router, prefix="/surveys", tags=["Surveys"])
 app.include_router(Sylabus.router, prefix="/sylabus", tags=["Sylabus"])
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
