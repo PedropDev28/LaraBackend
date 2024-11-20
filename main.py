@@ -28,8 +28,3 @@ app.include_router(Frases.router, prefix="/frases", tags=["Frases"])
 app.include_router(Surveys.router, prefix="/surveys", tags=["Surveys"])
 app.include_router(Sylabus.router, prefix="/sylabus", tags=["Sylabus"])
 
-# Punto de entrada para Uvicorn
-if __name__ == "__main__":
-    # Leer el puerto de la variable de entorno (por defecto 8000 si no está definida)
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn_run(app, host="0.0.0.0", port=port)
