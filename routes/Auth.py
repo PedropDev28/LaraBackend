@@ -59,17 +59,6 @@ async def login_for_access_token(form_data: dict):
     
     response = JSONResponse(content={"message": "Login successful"})
     
-    # Setear el token en la cookie
-    response.set_cookie(
-        "access_token",
-        token,
-        httponly=True,
-        secure=False,  # Solo en HTTPS
-        samesite="Strict",
-        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        path="/"
-    )
-    
     return response
 
 # Dependencia para obtener el usuario del token
@@ -82,19 +71,6 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     except jwt.PyJWTError:
         raise HTTPException(status_code=credentials_exception)
     return username
-
-@router.get("/protected")
-async def protected_route(request: Request):
-    token = request.cookies.get("access_token")
-    if token is None:
-        print("No token")
-        return JSONResponse(content={"message": "No token", "success": False})
-    
-    try:
-        user = get_current_user(token)
-        return {"message": f"{user}", "success": True}
-    except HTTPException as e:
-        raise e
 
 # Ruta para cerrar sesión
 @router.get("/logout")
