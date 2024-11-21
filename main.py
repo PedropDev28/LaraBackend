@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
  
 
 origins = [
-    "http://localhost:4200"
+    "*"
 ]
 
 async def get_db():
