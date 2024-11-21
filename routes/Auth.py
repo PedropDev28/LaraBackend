@@ -4,7 +4,8 @@ from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, status, Request
-
+from db import db
+import hashlib
 
 router = APIRouter()
 
@@ -21,6 +22,18 @@ credentials_exception = HTTPException(
     headers={"WWW-Authenticate": "Bearer"},
 )
 
+async def verify_password(stored_password: str, provided_password: str) -> bool:
+    # Dividir la contraseña almacenada
+    algorithm, salt, stored_hash = stored_password.split('$')
+    
+    # Crear el hash de la contraseña proporcionada
+    new_hash = hashlib.new(algorithm)
+    new_hash.update(salt.encode() + provided_password.encode())
+    new_hash_hex = new_hash.hexdigest()
+    
+    # Comparar el hash generado con el almacenado
+    return new_hash_hex == stored_hash
+
 
 # Función para generar el token JWT
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -36,20 +49,30 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 # Ruta para iniciar sesión y obtener el token
 @router.post("/token")
 async def login_for_access_token(form_data: dict):
-    # Aquí haces la autenticación real, validando un usuario y una contraseña
+    # Buscar usuario en la base de datos por su correo
+    user = await db["usuarios"].find_one({"mail": form_data['username']})
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Verificar la contraseña
+    if not await verify_password(user["password"], form_data['password']):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Crear token si la autenticación es exitosa
     user_dict = {"username": form_data['username']}
     token = create_access_token(data=user_dict)
     
     response = JSONResponse(content={"message": "Login successful"})
     
-    # Setea el token en la cookie
+    # Setear el token en la cookie
     response.set_cookie(
-        "access_token", 
-        token, 
-        httponly=True, 
+        "access_token",
+        token,
+        httponly=True,
         secure=True,  # Solo en HTTPS
-        samesite="Strict", 
-        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        samesite="Strict",
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
     
     return response
