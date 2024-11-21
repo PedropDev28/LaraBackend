@@ -87,7 +87,8 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 async def protected_route(request: Request):
     token = request.cookies.get("access_token")
     if token is None:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+        print("No token")
+        return JSONResponse(content={"message": "No token", "success": False})
     
     try:
         user = get_current_user(token)
