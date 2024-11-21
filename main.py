@@ -1,4 +1,4 @@
-from routes import Usuario, Audios, Clicks, Disfonias, Enfermedades, Frases, Surveys, Sylabus,Login
+from routes import Usuario, Audios, Clicks, Disfonias, Enfermedades, Frases, Surveys, Sylabus, Auth
 from db import db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,7 +25,7 @@ async def check_connection():
         return {"status": "Error de conexión", "error": str(e)}
     
 # Registrar rutas
-app.include_router(Login.router, prefix="/login", tags=["Login"])
+app.include_router(Auth.router, prefix="/login", tags=["Login"])
 app.include_router(Usuario.router, prefix="/usuarios", tags=["Usuario"])
 app.include_router(Audios.router, prefix="/audios", tags=["Audios"])
 app.include_router(Clicks.router, prefix="/clicks", tags=["Clicks"])

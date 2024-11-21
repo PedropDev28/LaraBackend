@@ -2,7 +2,7 @@ import jwt
 from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Request
 
 router = APIRouter()
 
@@ -49,3 +49,15 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     except jwt.PyJWTError:
         raise HTTPException(status_code=credentials_exception)
     return username
+
+@router.get("/protected")
+async def protected_route(request: Request):
+    token = request.cookies.get("access_token")
+    if token is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    try:
+        user = get_current_user(token)
+        return {"message": f"Hello {user}"}
+    except HTTPException as e:
+        raise e
