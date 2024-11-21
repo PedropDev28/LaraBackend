@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, status, Request
 from db import db
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 
 router = APIRouter()
@@ -34,6 +34,14 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+@router.post("/transform")
+async def transform(form_data: dict):
+    password = form_data['password']
+    
+    hashed_password = generate_password_hash(password)
+
+    return {"password": hashed_password}
 
 # Ruta para iniciar sesión y obtener el token
 @router.post("/token")
