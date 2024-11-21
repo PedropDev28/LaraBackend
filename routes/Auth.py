@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, status, Request
 
+
 router = APIRouter()
 
 # Clave secreta para firmar el token
