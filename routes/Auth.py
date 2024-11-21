@@ -57,7 +57,7 @@ async def login_for_access_token(form_data: dict):
     user_dict = {"username": form_data['username']}
     token = create_access_token(data=user_dict)
     
-    response = JSONResponse(content={"message": "Login successful"})
+    response = JSONResponse(content={"message": "Login successful", "token": token})
     
     return response
 
