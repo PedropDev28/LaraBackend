@@ -30,7 +30,7 @@ credentials_exception = HTTPException(
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     # Si no se pasa un expires_delta, se calcula el valor por defecto
-    expire = datetime.now() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -65,7 +65,7 @@ async def login_for_access_token(form_data: dict):
         httponly=True,
         secure=False,  # Solo en HTTPS
         samesite="Strict",
-        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        max_age=86400,
         path="/"
     )
     
