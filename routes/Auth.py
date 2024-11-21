@@ -1,3 +1,4 @@
+from fastapi.responses import JSONResponse
 import jwt
 from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta
@@ -35,10 +36,23 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 # Ruta para iniciar sesión y obtener el token
 @router.post("/token")
 async def login_for_access_token(form_data: dict):
-    # Aquí puedes hacer la autenticación real, por ejemplo, validando un usuario y una contraseña.
+    # Aquí haces la autenticación real, validando un usuario y una contraseña
     user_dict = {"username": form_data['username']}
     token = create_access_token(data=user_dict)
-    return {"access_token": token, "token_type": "bearer"}
+    
+    response = JSONResponse(content={"message": "Login successful"})
+    
+    # Setea el token en la cookie
+    response.set_cookie(
+        "access_token", 
+        token, 
+        httponly=True, 
+        secure=True,  # Solo en HTTPS
+        samesite="Strict", 
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    )
+    
+    return response
 
 # Dependencia para obtener el usuario del token
 def get_current_user(token: str = Depends(oauth2_scheme)):
