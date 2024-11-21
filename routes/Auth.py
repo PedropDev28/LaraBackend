@@ -64,7 +64,7 @@ async def login_for_access_token(form_data: dict):
         "access_token",
         token,
         httponly=True,
-        secure=True,  # Solo en HTTPS
+        secure=False,  # Solo en HTTPS
         samesite="Strict",
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
