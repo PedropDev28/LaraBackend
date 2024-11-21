@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, status, Request
 from db import db
-import hashlib
+from werkzeug.security import check_password_hash
+
 
 router = APIRouter()
 
@@ -21,18 +22,6 @@ credentials_exception = HTTPException(
     detail="Could not validate credentials",
     headers={"WWW-Authenticate": "Bearer"},
 )
-
-async def verify_password(stored_password: str, provided_password: str) -> bool:
-    # Dividir la contraseña almacenada
-    algorithm, salt, stored_hash = stored_password.split('$')
-    
-    # Crear el hash de la contraseña proporcionada
-    new_hash = hashlib.new(algorithm)
-    new_hash.update(salt.encode() + provided_password.encode())
-    new_hash_hex = new_hash.hexdigest()
-    
-    # Comparar el hash generado con el almacenado
-    return new_hash_hex == stored_hash
 
 
 # Función para generar el token JWT
@@ -56,7 +45,7 @@ async def login_for_access_token(form_data: dict):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # Verificar la contraseña
-    if not await verify_password(user["password"], form_data['password']):
+    if not await check_password_hash(user["password"], form_data['password']):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # Crear token si la autenticación es exitosa
