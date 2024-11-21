@@ -1,9 +1,8 @@
 from routes import Usuario, Audios, Clicks, Disfonias, Enfermedades, Frases, Surveys, Sylabus,Login
 from db import db
 from fastapi import FastAPI
-import os
-from uvicorn import run as uvicorn_run
 from fastapi.middleware.cors import CORSMiddleware
+ 
 
 origins = [
     "http://localhost:4200"
