@@ -8,7 +8,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[Sylabus])
 async def get_sylabus():
-    sylabus = await db["sylabus"].find()
+    sylabus = await db["sylabus"].find().to_list(100)
     return sylabus
 
 @router.post("/", response_model=Sylabus)
