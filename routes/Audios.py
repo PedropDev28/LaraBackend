@@ -13,10 +13,11 @@ async def get_audios():
 
 @router.get("/five_less", response_model=List[Audios])
 async def get_five_less_audios():
+    ##hacer pipeline para sacar los 5 tags menos usados
     pipeline = [
-    {"$group": {"_id": "$texto.tag", "count": {"$sum": 1}}},
-    {"$sort": {"count": 1}},
-    {"$limit": 5}
+        {"$group": {"_id": "$texto.tag", "count": {"$sum": 1}}},
+        {"$sort": {"count": 1}},
+        {"$limit": 5}
     ]
     audios = await db["audios"].aggregate(pipeline).to_list(5)
     return audios
