@@ -11,6 +11,24 @@ async def get_audios():
     audios = await db["audios"].find().to_list(15000)
     return audios
 
+@router.get("/five_less", response_model=List[Audios])
+async def get_five_less_audios():
+    pipeline = [
+    {"$group": {"_id": "$texto.tag", "count": {"$sum": 1}}},
+    {"$sort": {"count": 1}},
+    {"$limit": 10}
+    ]
+    audios = await db["audios"].aggregate(pipeline).to_list(10)
+    return audios
+
+@router.get("/five_random", response_model=List[Audios])
+async def get_five_random_audios():
+    pipeline = [
+    {"$sample": {"size": 5}}
+    ]
+    audios = await db["audios"].aggregate(pipeline).to_list(5)
+    return audios
+
 @router.post("/", response_model=Audios)
 async def create_audios(audios: Audios):
     result = await db["audios"].insert_one(audios.dict(by_alias=True))
