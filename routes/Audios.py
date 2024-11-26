@@ -8,7 +8,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[Audios])
 async def get_audios():
-    audios = await db["audios"].find().to_list(100)
+    audios = await db["audios"].find().to_list(15000)
     return audios
 
 @router.post("/", response_model=Audios)
