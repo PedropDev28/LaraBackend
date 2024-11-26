@@ -16,9 +16,9 @@ async def get_five_less_audios():
     pipeline = [
     {"$group": {"_id": "$texto.tag", "count": {"$sum": 1}}},
     {"$sort": {"count": 1}},
-    {"$limit": 10}
+    {"$limit": 5}
     ]
-    audios = await db["audios"].aggregate(pipeline).to_list(10)
+    audios = await db["audios"].aggregate(pipeline).to_list(5)
     return audios
 
 @router.get("/five_random", response_model=List[Audios])
