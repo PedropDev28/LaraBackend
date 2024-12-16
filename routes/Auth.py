@@ -43,22 +43,43 @@ def generate_password(password: str):
 # Ruta para iniciar sesión y obtener el token
 @router.post("/token")
 async def login_for_access_token(form_data: dict):
-    # Buscar usuario en la base de datos por su correo
     user = await db["usuarios"].find_one({"mail": form_data['username']})
     
-    if not user:
+    if not user or not check_password_hash(user["password"], form_data['password']):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # Verificar la contraseña
-    if not check_password_hash(user["password"], form_data['password']):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+    token = create_access_token(data={"username": form_data['username']})
     
-    # Crear token si la autenticación es exitosa
-    user_dict = {"username": form_data['username']}
-    token = create_access_token(data=user_dict)
+    usuario_model = Usuario(
+        fecha_nacimiento=user.get("fecha_nacimiento"),
+        mail=user.get("mail"),
+        password=None,
+        rol=user.get("rol"),
+        nombre=user.get("nombre"),
+        sexo=user.get("sexo"),
+        parent=user.get("parent"),
+        ultima_conexion=datetime.now(),
+        cant_audios=user.get("cant_audios"),
+        provincia=user.get("provincia"),
+        enfermedades=user.get("enfermedades", []),
+        dis=user.get("dis", []),
+        font_size=user.get("font_size"),
+        entidad=user.get("entidad"),
+        observaciones=user.get("observaciones"),
+    )
     
-    response = JSONResponse(content={"message": "Login successful", "token": token})
+    # Convertir los datos a un dict serializable
+    usuario_data = usuario_model.dict()
+    usuario_data["fecha_nacimiento"] = usuario_data["fecha_nacimiento"].isoformat() if usuario_data["fecha_nacimiento"] else None
+    usuario_data["ultima_conexion"] = usuario_data["ultima_conexion"].isoformat() if usuario_data["ultima_conexion"] else None
     
+    response = JSONResponse(
+        content={
+            "message": "Login successful",
+            "token": token,
+            "user": usuario_data
+        }
+    )
     return response
 
 # Dependencia para obtener el usuario del token
