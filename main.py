@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
  
 
 origins = [
+    "http://127.0.0.1:4200",
     "http://localhost:4200",
     "https://lara-frontend-omega.vercel.app"
 ]
