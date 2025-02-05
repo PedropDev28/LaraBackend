@@ -11,16 +11,44 @@ async def get_audios():
     audios = await db["audios"].find().to_list(15000)
     return audios
 
+@router.get("/twenty_audios", response_model=List[Audios])
+async def get_twenty_audios():
+    audios = await db["audios"].find().to_list(20)
+    return audios
+
+
 @router.get("/five_less", response_model=List[Audios])
 async def get_five_less_audios():
     ##hacer pipeline para sacar los 5 tags menos usados
     pipeline = [
-        {"$group": {"_id": "$texto.tag", "count": {"$sum": 1}}},
-        {"$sort": {"count": 1}},
-        {"$limit": 5}
+        # Contamos cuántas veces aparece cada tag
+        {"$group": {"_id": "$texto.tag", "cantidad": {"$sum": 1}}},  
+        # Ordenamos de menor a mayor cantidad de uso
+        {"$sort": {"cantidad": 1}},  
+        # Limitamos a los 5 menos usados
+        {"$limit": 5},  
+        # Hacemos un lookup para traer los audios completos con esos tags
+        {
+            "$lookup": {
+                "from": "audios",
+                "localField": "_id",
+                "foreignField": "texto.tag",
+                "as": "audios_completos"
+            }
+        },  
+        # Desanidamos la lista de audios y tomamos solo uno por cada tag menos usado
+        {"$unwind": "$audios_completos"},
+        # Agrupamos de nuevo para devolver los audios completos
+        {
+            "$replaceRoot": {
+                "newRoot": "$audios_completos"
+            }
+        }
     ]
+
     audios = await db["audios"].aggregate(pipeline).to_list(5)
     return audios
+
 
 @router.get("/five_random", response_model=List[Audios])
 async def get_five_random_audios():
@@ -51,6 +79,13 @@ async def update_audios(audios_id: str, audios: Audios):
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Audio no encontrado")
     audios.id = audios_id
+    return audios
+
+@router.get("/search", response_model=List[Audios])
+async def search_audios_by_text(text: str):
+    audios = await db["audios"].find({"texto": {"$regex": text, "$options": "i"}}).to_list(100)
+    if not audios:
+        raise HTTPException(status_code=404, detail="No se encontraron audios")
     return audios
 
 @router.delete("/{audios_id}")

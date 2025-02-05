@@ -1,6 +1,6 @@
 from fastapi.responses import JSONResponse
 import jwt
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, status, Request
@@ -42,13 +42,13 @@ def generate_password(password: str):
 
 # Ruta para iniciar sesión y obtener el token
 @router.post("/token")
-async def login_for_access_token(form_data: dict):
-    user = await db["usuarios"].find_one({"mail": form_data['username']})
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = await db["usuarios"].find_one({"mail": form_data.username})
     
-    if not user or not check_password_hash(user["password"], form_data['password']):
+    if not user or not check_password_hash(user["password"], form_data.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    token = create_access_token(data={"username": form_data['username']})
+    token = create_access_token(data={"username": form_data.username})
     
     usuario_model = Usuario(
         fecha_nacimiento=user.get("fecha_nacimiento"),
@@ -95,9 +95,11 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 
 # Ruta para cerrar sesión
 @router.get("/logout")
-async def logout():
-    response = JSONResponse(content={"message": "Logout successful"})
-    response.delete_cookie("access_token")
+async def logout(request: Request):
+    response = JSONResponse(
+        content={"message": "Logout successful"}
+    )
+    response.delete_cookie("token")
     return response
 
 
@@ -140,3 +142,35 @@ async def register_user(form_data: dict):
 
     await db["usuarios"].insert_one(user_dict)
     return {"message": "User registered successfully"}
+
+# Ruta para obtener el usuario actual
+@router.get("/me", response_model=Usuario)
+async def read_users_me(current_user: str = Depends(get_current_user)):
+    user = await db["usuarios"].find_one({"mail": current_user})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    usuario_model = Usuario(
+        fecha_nacimiento=user.get("fecha_nacimiento"),
+        mail=user.get("mail"),
+        password=None,
+        rol=user.get("rol"),
+        nombre=user.get("nombre"),
+        sexo=user.get("sexo"),
+        parent=user.get("parent"),
+        ultima_conexion=datetime.now(),
+        cant_audios=user.get("cant_audios"),
+        provincia=user.get("provincia"),
+        enfermedades=user.get("enfermedades", []),
+        dis=user.get("dis", []),
+        font_size=user.get("font_size"),
+        entidad=user.get("entidad"),
+        observaciones=user.get("observaciones"),
+    )
+    
+    # Convertir los datos a un dict serializable
+    usuario_data = usuario_model.dict()
+    usuario_data["fecha_nacimiento"] = usuario_data["fecha_nacimiento"].isoformat() if usuario_data["fecha_nacimiento"] else None
+    usuario_data["ultima_conexion"] = usuario_data["ultima_conexion"].isoformat() if usuario_data["ultima_conexion"] else None
+    
+    return usuario_data
