@@ -11,6 +11,11 @@ async def get_audios():
     audios = await db["audios"].find().to_list(15000)
     return audios
 
+@router.get("/by_user/{user_mail}", response_model=List[Audios])
+async def get_audios_by_user(user_mail: str):
+    audios = await db["audios"].find({"usuario.mail": user_mail}).to_list(100)
+    return audios
+
 @router.get("/twenty_audios", response_model=List[Audios])
 async def get_twenty_audios():
     audios = await db["audios"].find().to_list(20)

@@ -2,10 +2,11 @@ from fastapi.responses import JSONResponse
 import jwt
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends, status, Request
 from db import db
 from werkzeug.security import check_password_hash, generate_password_hash
+from models.UsuarioEspecial import UsuarioEspecial
 from models.Usuario import Usuario
 
 
@@ -102,8 +103,14 @@ async def logout(request: Request):
     response.delete_cookie("token")
     return response
 
-
-
+@router.post("/registerAT")
+async def register_userAT(user_data: UsuarioEspecial):
+    user_dict = user_data.dict()
+    user_password = user_dict.get("password")
+    user_dict["password"] = generate_password(user_password)
+    await db["usuarios"].insert_one(user_dict)
+    return {"message": "User registered successfully"}
+    
 # Ruta para registrar un usuario
 @router.post("/register")
 async def register_user(form_data: dict):
@@ -174,3 +181,8 @@ async def read_users_me(current_user: str = Depends(get_current_user)):
     usuario_data["ultima_conexion"] = usuario_data["ultima_conexion"].isoformat() if usuario_data["ultima_conexion"] else None
     
     return usuario_data
+
+@router.get("/by_parent/{parent}", response_model=List[Usuario])
+async def get_users_by_parent(parent: str):
+    users = await db["usuarios"].find({"parent": parent}).to_list(100)
+    return users
